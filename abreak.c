@@ -57,7 +57,7 @@ static void print_break_points(int n_aa, aln_t *aa, const cmdopt_t *o, const bam
 	int i, n_high = 0;
 	if (n_aa < 2) return;
 	for (i = n_high = 0; i < n_aa; ++i)
-		if (aa[i].mapq > o->min_q) aa[n_high++] = aa[i];
+		if (aa[i].mapq >= o->min_q) aa[n_high++] = aa[i];
 	n_aa = n_high;
 	if (n_aa < 2) return;
 	ks_introsort(s2c, n_aa, aa);
@@ -132,7 +132,7 @@ static void analyze_aln(int n_aa, aln_t *aa, stat_t *s, const cmdopt_t *o, const
 	aln_t *p, *tmp = 0;
 	// if asked to print break points only
 	if (o->print_bp) {
-		if (n_aa > 1) print_break_points(n_aa, aa, o, h, name, fai);
+		if (1== 1) print_break_points(n_aa, aa, o, h, name, fai);
 		return;
 	}
 	// special treatment of unmapped
@@ -209,10 +209,10 @@ int main_abreak(int argc, char *argv[])
 	memset(&last, 0, sizeof(kstring_t));
 	memset(&out, 0, sizeof(kstring_t));
 	memset(&o, 0, sizeof(cmdopt_t));
-	o.min_len = 150; o.min_q = 10; o.mask_level = 0.5; o.max_gap = 500; o.min_tip_q = 10;
+	o.min_len = 20; o.min_q = 0; o.mask_level = 2; o.max_gap = 0; o.min_tip_q = 0;
 	while ((c = getopt(argc, argv, "ul:bq:m:g:pcs:d:f:")) >= 0)
 		if (c == 'b') o.is_bam = 1;
-		else if (c == 'u') o.print_bp = 1, o.min_sc = 80, o.min_q = 40;
+		else if (c == 'u') o.print_bp = 1, o.min_sc = 0, o.min_q = 0;
 		else if (c == 'p') o.print_bp = 1;
 		else if (c == 's') o.min_sc = atoi(optarg);
 		else if (c == 'l') o.min_len = atoi(optarg);
