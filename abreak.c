@@ -111,8 +111,7 @@ static void print_break_points(int n_aa, aln_t *aa, const cmdopt_t *o, const bam
 				max_end = qt_end > pt_start? qt_end : pt_start;
 			}
 			char *ref = fai ? faidx_fetch_seq(fai, h->target_name[q->tid], max_start, max_start, &rlen) : "N";
-			printf("%s\t%d\t.\t%c\t<%s>\t30\t%s\tSVTYPE=%s;END=%d;SVLEN=%d;QGAP=%d;MINMAPQ=%d;MINSC=%d;MINTIPQ=%d\n", h->target_name[q->tid],
-					max_start+1, toupper(ref[0]), type_str, min_tip_q < o->min_tip_q? "LowSupp" : ".", type_str, max_end, len, qgap, min_mapq, min_sc, min_tip_q);
+			printf("%s\t%d\t.\t%c\t<%s>\t30\t%s\tSVTYPE=%s;END=%d;SVLEN=%d;STRAND=%c,%c;QGAP=%d;MAPQ=%d,%d;MINSC=%d;MINTIPQ=%d;CTGID=%s;QPOSSTART=%d,%d;QPOSEND=%d,%d;RPOSTART=%d,%d;RPOSEND=%d,%d\n", h->target_name[q->tid],max_start+1, toupper(ref[0]), type_str, min_tip_q < o->min_tip_q? "LowSupp" : ".", type_str, max_end,len,"+-"[q->flag>>4&1],"+-"[p->flag>>4&1], qgap,q->mapq,p->mapq, min_sc, min_tip_q,name,q->qbeg,q->qbeg + q->qlen, p->qbeg, p->qbeg + p->qlen, q->pos, q->pos + q->rlen,p->pos, p->pos + p->rlen);
 		} else {
 			int dir = (p->flag&16)? '[' : ']';
 			char *ref = fai ? faidx_fetch_seq(fai, h->target_name[q->tid], qt_end, qt_end, &rlen) : "N";
@@ -120,8 +119,9 @@ static void print_break_points(int n_aa, aln_t *aa, const cmdopt_t *o, const bam
 			printf("%s\t%d\t.\t%c\t", h->target_name[q->tid], qt_end + 1, toupper(ref[0]));
 			if (q->flag&16) printf("%c%s:%d%c%c", dir, h->target_name[p->tid], pt_start + 1, dir, toupper(join[0]));
 			else printf("%c%c%s:%d%c", toupper(join[0]), dir, h->target_name[p->tid], pt_start + 1, dir);
-			printf("\t30\t%s\tSVTYPE=COMPLEX;QGAP=%d;MINMAPQ=%d;MINSC=%d;MINTIPQ=%d\n",
-					min_tip_q < o->min_tip_q? "LowSupp" : ".", qgap, min_mapq, min_sc, min_tip_q);
+			printf("\t30\t%s\tSVTYPE=BND;QGAP=%d;STRAND=%c,%c;MAPQ=%d,%d",min_tip_q < o->min_tip_q? "LowSupp" : ".", qgap,"+-"[q->flag>>4&1],"+-"[p->flag>>4&1],q->mapq,p->mapq);
+                        printf(";MINSC=%d;MINTIPQ=%d;CTGID=%s;QPOSSTART=%d,%d;QPOSEND=%d,%d;RPOSTART=%d,%d;RPOSEND=%d,%d\n",
+					min_sc, min_tip_q,name,q->qbeg,q->qbeg + q->qlen,p->qbeg,p->qbeg + p->qlen, q->pos, q->pos + q->rlen,p->pos, p->pos + p->rlen);
 		}
 	}
 }
@@ -266,9 +266,15 @@ int main_abreak(int argc, char *argv[])
 		printf("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n");
 		printf("##INFO=<ID=END,Number=1,Type=Integer,Description=\"End coordinate of this variant\">\n");
 		printf("##INFO=<ID=QGAP,Number=1,Type=Integer,Description=\"Length of gap on the query sequence\">\n");
-		printf("##INFO=<ID=MINMAPQ,Number=1,Type=Integer,Description=\"Min flanking mapping quality\">\n");
+		printf("##INFO=<ID=QPOSSTART,Number=2,Type=Integer,Description=\"start and end position within the query at the start position\">\n");
+		printf("##INFO=<ID=QPOSEND,Number=2,Type=Integer,Description=\"start and end position within the query at the end position\">\n");
+		printf("##INFO=<ID=RPOSTART,Number=2,Type=Integer,Description=\"reference position (start,end) of the flanking sequence (start)\">\n");
+		printf("##INFO=<ID=RPOSEND,Number=2,Type=Integer,Description=\"reference position (start,end) of the flanking sequence (end)\">\n");
+		printf("##INFO=<ID=MAPQ,Number=2,Type=Integer,Description=\"Mapping quality of the flanking sequence (start,end)\">\n");
+		printf("##INFO=<ID=STRAND,Number=2,Type=String,Description=\"orientation of the aligned contig (start,end)\">\n");
 		printf("##INFO=<ID=MINSC,Number=1,Type=Integer,Description=\"Min flanking alignment score\">\n");
 		printf("##INFO=<ID=MINTIPQ,Number=1,Type=Integer,Description=\"Min quality/depth flanking the break point\">\n");
+		printf("##INFO=<ID=CTGID,Number=1,Type=String,Description=\"name of the query contig\">\n");
 		printf("##FILTER=<ID=LowSupp,Description=\"MINTIPQ < %d\">\n", o.min_tip_q);
 		printf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n");
 	}
